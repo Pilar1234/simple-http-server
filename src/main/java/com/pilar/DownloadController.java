@@ -67,7 +67,9 @@ public class DownloadController {
     return ResponseEntity
       .status(status)
       .eTag(filePointer.getEtag())
-      .lastModified(filePointer.getLastModified().toEpochMilli()).body(body);
+      .contentLength(filePointer.getSize())
+      .lastModified(filePointer.getLastModified().toEpochMilli())
+      .body(body);
   }
 
   private ResponseEntity<Resource> serveDownload(FilePointer filePointer) {

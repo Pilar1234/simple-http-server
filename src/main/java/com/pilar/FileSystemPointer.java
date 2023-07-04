@@ -52,4 +52,9 @@ public class FileSystemPointer implements FilePointer {
   public Instant getLastModified() {
     return Instant.ofEpochMilli(targetFile.lastModified());
   }
+
+  @Override
+  public long getSize() {
+    return targetFile.length();
+  }
 }

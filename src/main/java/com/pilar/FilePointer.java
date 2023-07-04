@@ -14,4 +14,6 @@ public interface FilePointer {
   boolean modifiedAfter(Instant isModifiedSince);
 
   Instant getLastModified();
+
+  long getSize();
 }
