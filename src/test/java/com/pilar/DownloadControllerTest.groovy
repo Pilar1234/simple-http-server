@@ -13,6 +13,8 @@ import java.time.Instant
 
 import static com.google.common.net.HttpHeaders.*
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
@@ -96,5 +98,39 @@ class DownloadControllerTest extends Specification {
                                 .header(IF_MODIFIED_SINCE, lastModifiedRecently))
                 .andExpect(
                         status().isOk())
+    }
+
+    def 'should return 200 OK on HEAD request, but without body'() {
+        expect:
+        mockMvc
+                .perform(
+                        head('/download/' + FileExamples.TXT_FILE_UUID))
+                .andExpect(
+                        status().isOk())
+                .andExpect(
+                        content().bytes(new byte[0]))
+    }
+
+    def 'should return 304 on HEAD request if we have cached version'() {
+        expect:
+        mockMvc
+                .perform(
+                        head('/download/' + FileExamples.TXT_FILE_UUID)
+                                .header(IF_NONE_MATCH, FileExamples.TXT_FILE.getEtag()))
+                .andExpect(
+                        status().isNotModified())
+                .andExpect(
+                        header().string(ETAG, FileExamples.TXT_FILE.getEtag()))
+    }
+
+    def 'should return Content-length header'() {
+        expect:
+        mockMvc
+                .perform(
+                        head('/download/' + FileExamples.TXT_FILE_UUID))
+                .andExpect(
+                        status().isOk())
+                .andExpect(
+                        header().longValue(CONTENT_LENGTH, FileExamples.TXT_FILE.size))
     }
 }
