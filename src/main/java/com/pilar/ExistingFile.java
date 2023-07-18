@@ -3,11 +3,13 @@ package com.pilar;
 import static org.springframework.http.HttpStatus.NOT_MODIFIED;
 import static org.springframework.http.HttpStatus.OK;
 
+import com.google.common.util.concurrent.RateLimiter;
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpMethod;
@@ -57,7 +59,9 @@ public class ExistingFile {
 
   private InputStreamResource buildResource(FilePointer filePointer) {
     final InputStream inputStream = filePointer.open();
-    return new InputStreamResource(inputStream);
+    final RateLimiter throttler = RateLimiter.create(64d * FileUtils.ONE_KB);
+    final ThrottlingInputStream throttlingInputStream = new ThrottlingInputStream(inputStream, throttler);
+    return new InputStreamResource(throttlingInputStream);
   }
 
   private ResponseEntity<Resource> response(FilePointer filePointer, HttpStatus status, Resource body) {
